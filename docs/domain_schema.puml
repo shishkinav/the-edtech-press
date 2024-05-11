@@ -1,0 +1,103 @@
+@startuml Доменные модели - схема
+
+' Сервис пользовательской модели
+class users.User
+class users.UserService {
+    subsribe()
+    unsubscribe()
+    publish_feedback()
+    change_feedback()
+}
+abstract class users.UserRepository
+
+users.UserRepository *-- users.User
+users.UserService *-- users.UserRepository
+
+' Сервис отзывов
+class feedbacks.Feedback {
+    user_id
+    type
+    genre
+    ...
+}
+class feedbacks.Genre
+enum feedbacks.UnitType {
+    LETTER
+    AUDIO
+}
+class feedbacks.FeedbackService
+abstract class feedbacks.FeedbackRepository
+abstract class feedbacks.BookRepository
+class feedbacks.Book
+
+feedbacks.UnitType --|> feedbacks.Feedback
+feedbacks.Genre --|> feedbacks.Book
+feedbacks.Feedback *-- feedbacks.Book
+feedbacks.BookRepository *-- feedbacks.Book
+feedbacks.BookRepository --* feedbacks.FeedbackService
+feedbacks.FeedbackRepository --* feedbacks.FeedbackService
+feedbacks.FeedbackRepository *-- feedbacks.Feedback
+
+
+' Сервис уведомлений и рассылки по доступным каналам коммуникаций
+class notifications.Subscriber {
+    user_id
+    handlers
+    ...
+}
+class notifications.SubscriberService
+abstract class notifications.Handler
+class notifications.Email
+class notifications.Telegram
+abstract class notifications.SubscriberRepository
+class notifications.TaskList
+
+notifications.Subscriber --* notifications.SubscriberRepository
+notifications.TaskList --* notifications.SubscriberRepository
+notifications.SubscriberRepository --* notifications.SubscriberService
+notifications.Handler --|> notifications.Email
+notifications.Handler --|> notifications.Telegram
+notifications.Subscriber *-- notifications.Handler: каналы уведомлений
+
+' Сервис образовательного и информационного контента
+abstract class newsletters.BaseUnit {
+    tags
+    authors
+    template
+    context
+    previous_id
+    ...
+}
+class newsletters.ServiceUnit
+class newsletters.NewsletterUnit
+class newsletters.CourseUnit
+class newsletters.Tag
+class newsletters.Author
+
+abstract class newsletters.NewsletterRepository
+
+class newsletters.NewsletterService {
+    user_id
+    newsletter_id
+    ...
+}
+
+newsletters.Tag --|> newsletters.BaseUnit
+newsletters.Author --|> newsletters.BaseUnit
+newsletters.BaseUnit --|> newsletters.ServiceUnit
+newsletters.BaseUnit --|> newsletters.NewsletterUnit
+newsletters.BaseUnit --|> newsletters.CourseUnit
+newsletters.BaseUnit --> newsletters.BaseUnit: предыдущий unit
+newsletters.NewsletterRepository --* newsletters.NewsletterService
+newsletters.NewsletterRepository *-- newsletters.BaseUnit
+
+' class dcn.Storage
+
+' Схематическое взаимодействие
+users.UserService --* newsletters.NewsletterService
+users.UserService --* feedbacks.FeedbackService
+
+notifications.SubscriberService *-- users.UserService
+notifications.SubscriberService --* feedbacks.FeedbackService
+notifications.SubscriberService --* newsletters.NewsletterService
+@enduml
